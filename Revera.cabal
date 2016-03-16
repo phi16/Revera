@@ -22,3 +22,5 @@ executable Revera
   build-depends:       base >=4.8 && <4.9
   hs-source-dirs:      src
   default-language:    Haskell2010
+  build-depends:       gloss
+  ghc-options:         -threaded
