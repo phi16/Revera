@@ -1,5 +1,6 @@
 import Graphics.Gloss.Interface.IO.Game
 import Revera.Core
+import Revera.Render
 
 main = playIO d c i w r h s where
   d = InWindow "Revera" (640,480) (300,300)

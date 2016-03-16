@@ -1,4 +1,4 @@
-module Revera.Font (fontMap,fontString) where 
+module Revera.Font (fontMap,fontString,centerString) where 
 
 import Data.Maybe
 import Data.Map.Strict hiding (lookup,map)
@@ -6,6 +6,14 @@ import Graphics.Gloss.Interface.IO.Game
 
 fontString :: String -> Picture
 fontString xs = pictures $ zipWith (\x i -> translate (2.5*i) 0 $ fontMap ! x) xs [0..]
+
+centerString :: String -> Picture
+centerString xs = pictures $ zipWith (\x i -> translate (2.5*i - w) 0 $ fontMap ! x) xs [0..] where
+  w = measureString xs / 2
+
+measureString :: String -> Float
+measureString [] = 0
+measureString xs = (fromIntegral (length xs) - 1) * 2.5
 
 fontMap :: Map Char Picture
 fontMap = insert 'O' (circle 0.3) $ fmap toPic $ fromList fs where

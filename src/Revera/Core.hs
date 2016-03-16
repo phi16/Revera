@@ -1,10 +1,8 @@
 module Revera.Core where
 
-import Graphics.Gloss.Interface.IO.Game
+import Revera.Font
 
 initialWorld = 0
-
-render w = return $ color white $ circle 10
 
 handleEvent e w = return w
 
