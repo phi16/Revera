@@ -1,6 +1,8 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TupleSections #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE GADTs #-}
 
@@ -10,9 +12,14 @@ import Prelude hiding (LT)
 import System.Random
 import Control.Monad.State.Lazy
 import Control.Lens hiding (indices)
+import Data.Traversable
 import Data.Array
 import Data.Maybe
+import qualified Data.Map.Strict as M ((!))
 import Data.List
+import Graphics.Gloss.Interface.IO.Game
+
+import Revera.Font
 
 data Dir = UD | DD | LD | RD
   deriving (Eq, Show, Enum)
@@ -20,6 +27,9 @@ data Tile = UT | DT | LT | RT | UDT | LRT | XT | OT | BT
   deriving (Eq, Show)
 newtype Field a = Field (Array (Int,Int) (Tile,a))
   deriving (Eq, Show, Functor)
+
+blankField :: Field ()
+blankField = Field $ listArray ((0,0),(0,0)) [(XT,())]
 
 move :: Dir -> (Int,Int) -> (Int,Int)
 move UD (x,y) = (x,y-1)
@@ -46,6 +56,30 @@ toTile UD = UT
 toTile DD = DT
 toTile LD = LT
 toTile RD = RT
+
+unTile :: Tile -> Dir
+unTile UT = UD
+unTile DT = DD
+unTile LT = LD
+unTile RT = RD
+
+bidir :: Tile -> Tile
+bidir UT = UDT
+bidir DT = UDT
+bidir LT = LRT
+bidir RT = LRT
+bidir t = t
+
+toChar :: Tile -> Char
+toChar UT = 'K'
+toChar DT = 'J'
+toChar LT = 'H'
+toChar RT = 'L'
+toChar UDT = 'T'
+toChar LRT = 'S'
+toChar OT = 'O'
+toChar XT = 'X'
+toChar BT = ' '
 
 makeField :: Int -> IO (Field ())
 makeField w = Field <$> fmap (fmap $ const ()) <$> let
@@ -102,31 +136,61 @@ makeField w = Field <$> fmap (fmap $ const ()) <$> let
                     then union (Just p) Nothing
                     else ix p._1 .= BT
                   return r
+      safe a = pretend $ do
+        a
+        us <- mapM (find . Just) ns
+        return $ all (/=Nothing) us
     res <- v (0,0) aDir
+
     forM_ (indices defArr) $ \p -> do
       (t,_) <- puse $ ix p
       if t == BT
         then do
-          ds <- lift selectDir
-          v <- proc ds $ \d -> case move d p of
-            p' -> let q = if outOfBounds p' then Nothing else Just p' in do
-              r <- pretend $ do
-                union q (Just p)
-                us <- mapM (find . Just) ns
-                return $ all (/=Nothing) us
-              if r
-                then do
-                  ix p._1 .= toTile d
-                  union q (Just p)
-                  return True
-                else return False
-          when (not v) $ do
-            ix p .= (OT,Just p)
+          c <- lift $ randomIO
+          if c < (0.05 :: Float)
+            then ix p .= (OT,Just p)
+            else do
+              ds <- lift $ selectDir
+              v <- proc ds $ \d -> case move d p of
+                p' -> let q = if outOfBounds p' then Nothing else Just p' in do
+                  r <- safe $ union q (Just p)
+                  if r
+                    then do
+                      ix p._1 .= toTile d
+                      union q (Just p)
+                      return True
+                    else return False
+              when (not v) $ do
+                ix p .= (OT,Just p)
         else return ()
+
+    forM_ (indices defArr) $ \p -> do
+      (t,e) <- puse $ ix p
+      u <- lift randomIO
+      when (u < (0.1 :: Float) && t`notElem`[XT,OT]) $ do
+        let
+          q = move (inv $ unTile t) p
+          q' = if outOfBounds q then Nothing else Just q
+        r <- safe $ union (Just p) q'
+        t' <- if r
+          then do
+            union (Just p) q'
+            return $ bidir t
+          else return t
+        ix p._1 .= t'
 
     forM_ (indices defArr) $ \p -> find $ Just p
     es <- elems <$> get
     let es' = transpose $ map (\x -> take w $ drop x es) [0,w..w*(w-1)]
-    lift $ putStrLn $ unlines $ map (concat . map (\(x,y) -> [head $ show x, head $ show y,' '])) es'
+    -- lift $ putStrLn $ unlines $ map (concat . map (\(x,y) -> show x ++ [head (show y)] ++ " ")) es'
     
     return ()
+
+drawField :: ((Int,Int) -> Tile -> a -> Picture) -> Field a -> Picture
+drawField f (Field as) = scale r r $ pictures $ map (\(i,(t,a)) -> f i t a) $ assocs as where
+  r = recip $ (+1) $ (2*) $ fromIntegral $ snd $ snd $ bounds as
+
+defDrawF :: (Int,Int) -> Tile -> a -> Picture
+defDrawF (fromIntegral -> x,fromIntegral -> y) t a = translate x y $ pictures [
+  color (makeColor 0.8 0.8 1 1) $ rectangleWire 1　1,
+  color white $ scale 0.4 0.4 $ fontMap M.! toChar t]

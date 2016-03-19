@@ -25,6 +25,8 @@ executable Revera
   build-depends:       gloss,
                        containers,
                        mtl,
-                       lens
+                       lens,
+                       array,
+                       random
   ghc-options:         -threaded
   extensions:          TemplateHaskell
