@@ -7,6 +7,7 @@ import Control.Lens hiding (zoom)
 import Revera.Font
 import Revera.Types
 import Revera.Field
+import Revera.Game
 
 type Render a = Writer [Picture] a
 
@@ -41,5 +42,4 @@ render w = return $ onRender $ do
     draw $ color white $ translate (-257) 200 $ zoom 7 $ fontString "get out of fRame"
     onRect (160,130) (240,180) $ \r -> do
       when (z<0.99) $ draw $ color white $ rectangleWire r 1
-      draw $ translate (-0.18) 0 $ scale 0.75 0.75 $ drawField defDrawF $ w^.curField
-      draw $ translate 0.43 0 $ scale 0.36 0.36 $ drawField defDrawF $ w^.curField
+      draw $ drawGame $ w^.game

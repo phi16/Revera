@@ -81,6 +81,8 @@ toChar OT = 'O'
 toChar XT = 'X'
 toChar BT = ' '
 
+attr i = iso (\(Field f) -> f) Field. ix i . _2
+
 makeField :: Int -> IO (Field ())
 makeField w = Field <$> fmap (fmap $ const ()) <$> let
     w' = (w-1)`div`2
