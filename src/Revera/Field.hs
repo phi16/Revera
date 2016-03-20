@@ -37,6 +37,12 @@ move DD (x,y) = (x,y+1)
 move LD (x,y) = (x-1,y)
 move RD (x,y) = (x+1,y)
 
+tileMove :: Tile -> (Int,Int) -> [(Int,Int)]
+tileMove UDT (x,y) = [(x,y-1),(x,y+1)]
+tileMove LRT (x,y) = [(x-1,y),(x+1,y)]
+tileMove OT (x,y) = []
+tileMove t (x,y) = [move (unTile t) (x,y)]
+
 inv :: Dir -> Dir
 inv UD = DD
 inv DD = UD
@@ -81,7 +87,9 @@ toChar OT = 'O'
 toChar XT = 'X'
 toChar BT = ' '
 
-attr i = iso (\(Field f) -> f) Field. ix i . _2
+att :: Functor f => (Array (Int,Int) (Tile,a) -> f (Array (Int,Int) (Tile,b))) -> (Field a -> f (Field b)) 
+att = iso (\(Field f) -> f) Field
+attr i = iso (\(Field f) -> f) Field . ix i . _2
 
 makeField :: Int -> IO (Field ())
 makeField w = Field <$> fmap (fmap $ const ()) <$> let
@@ -184,15 +192,19 @@ makeField w = Field <$> fmap (fmap $ const ()) <$> let
     forM_ (indices defArr) $ \p -> find $ Just p
     es <- elems <$> get
     let es' = transpose $ map (\x -> take w $ drop x es) [0,w..w*(w-1)]
-    -- lift $ putStrLn $ unlines $ map (concat . map (\(x,y) -> show x ++ [head (show y)] ++ " ")) es'
     
     return ()
 
 drawField :: ((Int,Int) -> Tile -> a -> Picture) -> Field a -> Picture
-drawField f (Field as) = scale r r $ pictures $ map (\(i,(t,a)) -> f i t a) $ assocs as where
+drawField f (Field as) = scale r r $ pictures $ map (\((x,y),(t,a)) -> ts x y $ f (x,y) t a) $ assocs as where
   r = recip $ (+1) $ (2*) $ fromIntegral $ snd $ snd $ bounds as
+  ts x y = translate (fromIntegral x) (fromIntegral y)
 
 defDrawF :: (Int,Int) -> Tile -> a -> Picture
-defDrawF (fromIntegral -> x,fromIntegral -> y) t a = translate x y $ pictures [
+defDrawF (fromIntegral -> x,fromIntegral -> y) t a = pictures [
   color (makeColor 0.8 0.8 1 1) $ rectangleWire 1　1,
-  color white $ scale 0.4 0.4 $ fontMap M.! toChar t]
+  color tileColor $ scale 0.4 0.4 $ fontMap M.! toChar t] where
+    tileColor = case t of
+      XT -> light cyan
+      OT -> dark orange
+      _ -> white
