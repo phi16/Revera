@@ -6,7 +6,7 @@ import System.Random
 import Graphics.Gloss.Interface.IO.Game
 
 import Revera.Field
-import Revera.Types
+import Revera.World
 import Revera.Game
 
 initialWorld :: World

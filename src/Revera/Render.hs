@@ -5,7 +5,7 @@ import Control.Monad.Writer.Lazy
 import Control.Lens hiding (zoom)
 
 import Revera.Font
-import Revera.Types
+import Revera.World
 import Revera.Field
 import Revera.Game
 

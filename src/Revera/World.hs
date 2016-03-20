@@ -1,4 +1,4 @@
-module Revera.Types where
+module Revera.World where
 
 import Control.Lens
 import Revera.Field
