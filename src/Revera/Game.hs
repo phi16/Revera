@@ -2,7 +2,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE MultiWayIf #-}
 
-module Revera.Game (Game,initGame,stepGame,startGame,tickGame,drawGame,inputGame) where
+module Revera.Game (Game,initGame,stepGame,startGame,tickGame,drawGame,pressKey,releaseKey) where
 
 import Prelude hiding (LT,GT)
 import Control.Lens
@@ -10,7 +10,7 @@ import qualified Control.Monad.State.Lazy as S hiding (state)
 import Graphics.Gloss.Interface.IO.Game
 import System.Random
 import Data.Maybe
-import Data.Array (bounds,listArray)
+import Data.Array (Array,bounds,listArray)
 
 import Revera.Field
 import Revera.Font
@@ -32,7 +32,8 @@ data Game = Game {
   _speed :: Float,
   _count :: Int,
   _vibra :: Float,
-  _rand :: Float
+  _rand :: Float,
+  _keys :: Array Dir Bool
 }
 makeLenses ''Game
 
@@ -47,7 +48,8 @@ initGame = Game {
   _speed = 0.05,
   _count = 0,
   _vibra = 0,
-  _rand = 0
+  _rand = 0,
+  _keys = listArray (UD,RD) $ repeat False
 }
 
 lift = S.lift
@@ -78,7 +80,11 @@ stepGame = do
           else return ()
       _ -> return ()
     Play -> case s of
-      Await -> return ()
+      Await -> do
+        k <- preuse $ keys . ifolded . filtered id . asIndex
+        case k of
+          Nothing -> return ()
+          Just d -> inputKey d
       Anim -> do
         a <- animate
         if a
@@ -177,11 +183,6 @@ inputKey d = do
     curField.attr(0,0)._1 .= 0
     vibra .= 2
 
-inputGame :: Dir -> Gaming ()
-inputGame d = do
-  m <- use mode
-  when (m == Play) $ inputKey d
-
 startGame :: Gaming ()
 startGame = do
   speed .= 0.05
@@ -212,7 +213,9 @@ tickGame = do
     _ -> return ()
 
 drawGame :: Float -> Game -> Picture
-drawGame curT g = let
+drawGame curT' g = let
+    maxT = 64
+    curT = maxT - curT'
     t = g^.place
     p#q = p*(1-t) + q*t
     p##q = p*(1-sqrt t) + q*sqrt t
@@ -254,7 +257,7 @@ drawGame curT g = let
         scale 0.2 0.2 $ color (light cyan) $ fontString $ show $ decodeNum f,
         color white $ rectangleWire 1 1]
       else drawField fu f
-    restTime = if 0 < curT && curT < 60 && g^.mode == Play
+    restTime = if 0 < curT && curT < maxT-4 && g^.mode == Play
       then let
           str = take 4 (show curT) ++ drop 2 (show $ g^.rand)
           c = if curT < 10 then magenta else vaniCol
@@ -269,3 +272,9 @@ drawGame curT g = let
     translate 0.43 (-0.25) $ scale 0.03 0.03 $ color baseCol $ centerString "next",
     translate 0.3 0.25 $ scale 0.03 0.03 $ color baseCol $ fontString $ show $ g^.count,
     translate 0.28 0.35 $ scale 0.016 0.016 $ restTime]
+
+pressKey :: Dir -> Gaming ()
+pressKey d = keys.ix d .= True
+
+releaseKey :: Dir -> Gaming ()
+releaseKey d = keys.ix d .= False

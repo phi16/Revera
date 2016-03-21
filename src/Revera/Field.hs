@@ -22,7 +22,7 @@ import Graphics.Gloss.Interface.IO.Game
 import Revera.Font
 
 data Dir = UD | DD | LD | RD
-  deriving (Eq, Show, Enum)
+  deriving (Eq, Ord, Show, Enum, Ix)
 data Tile = UT | DT | LT | RT | UDT | LRT | XT | OT | BT
   deriving (Eq, Show)
 newtype Field a = Field (Array (Int,Int) (Tile,a))

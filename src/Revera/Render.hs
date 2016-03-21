@@ -33,7 +33,7 @@ render w = return $ onRender $ do
       sc = (*5) $ sin $ (*2) $ w^.opTime
       cc = (*5) $ cos $ (*2) $ w^.opTime
     onRect (160,130) (240,180) $ \r -> do
-      draw $ drawGame (64-w^.opTime) $ w^.game
+      draw $ drawGame (w^.opTime) $ w^.game
       when (z<0.99) $ do
         draw $ color (makeColor 0 0 0.1 1) $ pictures [
             translate (-2-r/2) 0 $ rectangleSolid 4 4,

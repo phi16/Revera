@@ -26,10 +26,20 @@ handleEvent e w = flip execStateT w $ case e of
       opTime .= 0
       zoom game $ startGame
     _ -> return ()
-  EventKey (SpecialKey KeyUp) Down _ _ -> when (w^.state==Game) $ zoom game $ inputGame UD
-  EventKey (SpecialKey KeyDown) Down _ _ -> when (w^.state==Game) $ zoom game $ inputGame DD
-  EventKey (SpecialKey KeyLeft) Down _ _ -> when (w^.state==Game) $ zoom game $ inputGame LD
-  EventKey (SpecialKey KeyRight) Down _ _ -> when (w^.state==Game) $ zoom game $ inputGame RD
+  EventKey (SpecialKey KeyEsc) Down _ _ -> case w^.state of
+    Game -> do
+      state .= Title
+      opTime .= 0
+      game .= initGame
+    _ -> return ()
+  EventKey (SpecialKey KeyUp) Down _ _ -> when (w^.state==Game) $ zoom game $ pressKey UD
+  EventKey (SpecialKey KeyDown) Down _ _ -> when (w^.state==Game) $ zoom game $ pressKey DD
+  EventKey (SpecialKey KeyLeft) Down _ _ -> when (w^.state==Game) $ zoom game $ pressKey LD
+  EventKey (SpecialKey KeyRight) Down _ _ -> when (w^.state==Game) $ zoom game $ pressKey RD
+  EventKey (SpecialKey KeyUp) Up _ _ -> when (w^.state==Game) $ zoom game $ releaseKey UD
+  EventKey (SpecialKey KeyDown) Up _ _ -> when (w^.state==Game) $ zoom game $ releaseKey DD
+  EventKey (SpecialKey KeyLeft) Up _ _ -> when (w^.state==Game) $ zoom game $ releaseKey LD
+  EventKey (SpecialKey KeyRight) Up _ _ -> when (w^.state==Game) $ zoom game $ releaseKey RD
   _ -> return ()
 
 step :: Float -> World -> IO World
