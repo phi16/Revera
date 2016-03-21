@@ -92,7 +92,7 @@ stepGame = do
           else return ()
       _ -> return ()
   p <- use place
-  place += (0 - p) / 2
+  place += (0 - p) / 1.1
   vi <- use vibra
   vibra .= if vi < 0.1 then 0 else vi-0.1
   rn <- lift randomIO
@@ -187,11 +187,11 @@ startGame :: Gaming ()
 startGame = do
   speed .= 0.05
   count .= 0
-  state .= Count 3
+  state .= Count 2
   glowing .= Nothing
   nf <- use nextField
-  curField .= (const (0,Nothing) <$> nf)
-  nextField .= encodeNum 3
+  curField .= (const (0,Nothing) <$> encodeNum 3)
+  nextField .= encodeNum 2
   mode .= Play
   return ()
 
@@ -214,7 +214,7 @@ tickGame = do
 
 drawGame :: Float -> Game -> Picture
 drawGame curT' g = let
-    maxT = 64
+    maxT = 103
     curT = maxT - curT'
     t = g^.place
     p#q = p*(1-t) + q*t
@@ -257,7 +257,7 @@ drawGame curT' g = let
         scale 0.2 0.2 $ color (light cyan) $ fontString $ show $ decodeNum f,
         color white $ rectangleWire 1 1]
       else drawField fu f
-    restTime = if 0 < curT && curT < maxT-4 && g^.mode == Play
+    restTime = if 0 < curT && curT < maxT-3 && g^.mode == Play
       then let
           str = take 4 (show curT) ++ drop 2 (show $ g^.rand)
           c = if curT < 10 then magenta else vaniCol

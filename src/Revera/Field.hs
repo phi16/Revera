@@ -205,6 +205,11 @@ defDrawF (fromIntegral -> x,fromIntegral -> y) t a = pictures [
   color (makeColor 0.8 0.8 1 1) $ rectangleWire 1　1,
   color tileColor $ scale 0.4 0.4 $ fontMap M.! toChar t] where
     tileColor = case t of
-      XT -> light cyan
-      OT -> dark orange
+      OT -> red
+      UT -> makeColorI 255 117 63 255
+      DT -> makeColorI 208 73 255 255
+      LT -> makeColorI 86 221 0 255
+      RT -> makeColorI 49 180 255 255
+      LRT -> light cyan
+      UDT -> makeColorI 255 56 131 255
       _ -> white
