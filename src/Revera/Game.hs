@@ -45,7 +45,7 @@ initGame = Game {
   _state = Await,
   _mode = Init,
   _place = 0,
-  _speed = 0.05,
+  _speed = 0.1,
   _count = 0,
   _vibra = 0,
   _rand = 0,
@@ -147,11 +147,11 @@ win = do
   count += 1
   m <- use mode
   when (m == Play) $ speed .= if
-    | d < 10 -> 0.05
-    | d < 30 -> 0.08
-    | d < 50 -> 0.12
-    | d < 100 -> 0.15
-    | otherwise -> 0.2
+    | d < 10 -> 0.1
+    | d < 30 -> 0.15
+    | d < 50 -> 0.2
+    | d < 100 -> 0.3
+    | otherwise -> 0.5
 
 isNum :: Field a -> Bool
 isNum (Field a) = uncurry (/=) $ snd $ bounds a
@@ -185,7 +185,7 @@ inputKey d = do
 
 startGame :: Gaming ()
 startGame = do
-  speed .= 0.05
+  speed .= 0.1
   count .= 0
   state .= Count 2
   glowing .= Nothing
