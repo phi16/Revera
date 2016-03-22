@@ -43,6 +43,8 @@ render w = return $ onRender $ do
         draw $ color white $ rectangleWire r 1
     draw $ color (greyN 0.2 * violet) $ translate (-187) (-100+sc) $ zoom 75 $ polygon [(-1,-1),(1,-1),(-1,1)]
     draw $ color (greyN 0.2 * blue) $ translate (188) (-100+sc) $ zoom 75 $ polygon [(1,-1),(1,1),(-1,1)]
+    draw $ color violet $ translate (-187) (-100+sc) $ zoom 75 $ line [(-1,-1),(1,-1),(-1,1),(-1,-1)]
+    draw $ color blue $ translate (188) (-100+sc) $ zoom 75 $ line [(1,-1),(1,1),(-1,1),(1,-1)]
     draw $ color white $ translate 0 (-110) $ pictures [
       translate 0 sc $ zoom 75 $ centerString "R A",
       translate 0 (sc/2) $ zoom 25 $ centerString "eVEr"]

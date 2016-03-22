@@ -89,7 +89,7 @@ toChar BT = ' '
 
 att :: Functor f => (Array (Int,Int) (Tile,a) -> f (Array (Int,Int) (Tile,b))) -> (Field a -> f (Field b)) 
 att = iso (\(Field f) -> f) Field
-attr i = iso (\(Field f) -> f) Field . ix i . _2
+attr i = att . ix i . _2
 
 makeField :: Int -> IO (Field ())
 makeField w = Field <$> fmap (fmap $ const ()) <$> let
@@ -151,13 +151,14 @@ makeField w = Field <$> fmap (fmap $ const ()) <$> let
         us <- mapM (find . Just) ns
         return $ all (/=Nothing) us
     res <- v (0,0) aDir
+    forM_ (filter (/=move (inv aDir) (0,0)) $ ns) $ \e -> ix e._1 .= OT
 
     forM_ (indices defArr) $ \p -> do
       (t,_) <- puse $ ix p
       if t == BT
         then do
           c <- lift $ randomIO
-          if c < (0.05 :: Float)
+          if c < (0 :: Float) -- (0.05 :: Float)
             then ix p .= (OT,Just p)
             else do
               ds <- lift $ selectDir
