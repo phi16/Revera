@@ -27,6 +27,7 @@ executable Revera
                        mtl,
                        lens,
                        array,
-                       random
+                       random,
+                       directory
   ghc-options:         -threaded
   extensions:          TemplateHaskell

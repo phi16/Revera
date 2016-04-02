@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Revera.Core where
 
 import Control.Lens
@@ -7,7 +9,9 @@ import Graphics.Gloss.Interface.IO.Game
 
 import Revera.Field
 import Revera.World
-import Revera.Game
+import Revera.Game hiding (state,State)
+import qualified Revera.Game as G (state)
+import Revera.Rank hiding (lift)
 
 initialWorld :: World
 initialWorld = World {
@@ -15,7 +19,8 @@ initialWorld = World {
   _opTime = 0,
   _state = Title,
   _zooming = 0,
-  _game = initGame
+  _game = initGame,
+  _rank = initRank
 }
 
 handleEvent :: Event -> World -> IO World
@@ -25,13 +30,17 @@ handleEvent e w = flip execStateT w $ case e of
       state .= Game
       opTime .= 0
       zoom game $ startGame
-    _ -> return ()
-  EventKey (SpecialKey KeyEsc) Down _ _ -> case w^.state of
-    Game -> do
+    Result -> do
       state .= Title
       opTime .= 0
       game .= initGame
+      rank .= initRank
     _ -> return ()
+  EventKey (SpecialKey KeyEsc) Down _ _ -> do
+    state .= Title
+    opTime .= 0
+    game .= initGame
+    rank .= initRank
   EventKey (SpecialKey KeyUp) Down _ _ -> when (w^.state==Game) $ zoom game $ pressKey UD
   EventKey (SpecialKey KeyDown) Down _ _ -> when (w^.state==Game) $ zoom game $ pressKey DD
   EventKey (SpecialKey KeyLeft) Down _ _ -> when (w^.state==Game) $ zoom game $ pressKey LD
@@ -44,11 +53,23 @@ handleEvent e w = flip execStateT w $ case e of
 
 step :: Float -> World -> IO World
 step f w = flip execStateT w $ do
-  if w^.state == Title
-    then zooming += (0 - w^.zooming) / 3
-    else zooming += (1 - w^.zooming) / 3
+  case w^.state of
+    Title  -> zooming += (0 - w^.zooming) / 3
+    Game   -> zooming += (1 - w^.zooming) / 3
+    Result -> zooming += (6 - w^.zooming) / 3
   when (w^.state == Game) $ do
     when (floor (w^.opTime) /= floor (w^.opTime + f)) $ do
       zoom game $ tickGame
-  zoom game $ stepGame
+    when (w^.opTime > maxTime) $ do
+      state .= Result
+      game.speed .= 1
+      zoom game $ let
+          a = animate >>= \case
+            True -> G.state .= Await
+            False -> a
+        in a
+      sc <- use $ game.count
+      zoom rank $ addRank sc
+  when (w^.state /= Result) $ zoom game $ stepGame
+  when (w^.state == Result) $ zoom rank $ stepRank
   opTime += f

@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiWayIf #-}
+
 module Revera.Render (render) where
 
 import Graphics.Gloss.Interface.IO.Game
@@ -7,7 +9,8 @@ import Control.Lens hiding (zoom)
 import Revera.Font
 import Revera.World
 import Revera.Field
-import Revera.Game
+import Revera.Game hiding (state)
+import Revera.Rank
 
 type Render a = Writer [Picture] a
 
@@ -36,10 +39,10 @@ render w = return $ onRender $ do
       draw $ drawGame (w^.opTime) $ w^.game
       when (z<0.99) $ do
         draw $ color (makeColor 0 0 0.1 1) $ pictures [
-            translate (-2-r/2) 0 $ rectangleSolid 4 4,
-            translate (2+r/2) 0 $ rectangleSolid 4 4,
-            translate 0 (-2.5) $ rectangleSolid 4 4,
-            translate 0 2.5 $ rectangleSolid 4 4]
+          translate (-2-r/2) 0 $ rectangleSolid 4 4,
+          translate (2+r/2) 0 $ rectangleSolid 4 4,
+          translate 0 (-2.5) $ rectangleSolid 4 4,
+          translate 0 2.5 $ rectangleSolid 4 4]
         draw $ color white $ rectangleWire r 1
     draw $ color (greyN 0.2 * violet) $ translate (-187) (-100+sc) $ zoom 75 $ polygon [(-1,-1),(1,-1),(-1,1)]
     draw $ color (greyN 0.2 * blue) $ translate (188) (-100+sc) $ zoom 75 $ polygon [(1,-1),(1,1),(-1,1)]
@@ -52,3 +55,33 @@ render w = return $ onRender $ do
     draw $ color white $ translate (-257) 180 $ zoom 7 $ fontString "find the way to "
     draw $ color white $ translate (-257) 200 $ zoom 7 $ fontString "get out of fRame"
     draw $ color (makeColor 0.8 0.8 1 1) $ translate (-255) 100 $ zoom 30 $ fontString "HJKL"
+  when (w^.state == Result) $ do
+    let
+      scr = w^.game.count
+      ix = w^.rank.rankIx
+      pos = w^.rank.position
+      (sz,condStr) = if
+        | scr == 0 -> (74,"null")
+        | scr < 10 -> (74,"PooR")
+        | scr < 30 -> (37,"bEginneR")
+        | scr < 50 -> (74,"good")
+        | scr < 60 -> (74,"nIce")
+        | scr < 70 -> (45,"PeRfEct")
+        | scr < 100 -> (35,"ExcellEnt")
+        | otherwise -> (31,"incrEdIble")
+      t i j = translate i j $ rotate 30 $ zoom sz $ centerString condStr
+    draw $ color (withAlpha 0.07 orange) $ pictures [ t i j | i<-[-2..2], j<-[-2..2] ]
+    forM_ (zip [0..] $ w^.rank.rankings) $ \(i,r) -> do
+      let
+        c = if
+          | r < 50 -> greyN 0.5
+          | r < 60 -> makeColor 0.7 0.5 0.2 1
+          | r < 70 -> greyN 0.8
+          | r < 100 -> yellow
+          | otherwise -> makeColor 0.5 1 1 1
+        x = -250
+        y = fromIntegral i * 29 - 40
+        str = show (i+1) ++ ". " ++ show r
+      draw $ color c $ translate x y $ zoom 10 $ fontString str
+    draw $ color cyan $ translate (-50) 160 $ zoom 10 $ fontString "PREss entER to"
+    draw $ color cyan $ translate (-50) 190 $ zoom 10 $ fontString "back to title"

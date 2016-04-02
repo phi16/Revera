@@ -2,7 +2,9 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE MultiWayIf #-}
 
-module Revera.Game (Game,initGame,stepGame,startGame,tickGame,drawGame,pressKey,releaseKey) where
+module Revera.Game (
+  Game,initGame,stepGame,startGame,tickGame,drawGame,
+  pressKey,releaseKey,maxTime,count,speed,animate,state,State(..)) where
 
 import Prelude hiding (LT,GT)
 import Control.Lens
@@ -54,6 +56,9 @@ initGame = Game {
 
 lift = S.lift
 when = S.when
+
+maxTime :: Float
+maxTime = 103
 
 type Gaming a = S.StateT Game IO a
 
@@ -214,8 +219,7 @@ tickGame = do
 
 drawGame :: Float -> Game -> Picture
 drawGame curT' g = let
-    maxT = 103
-    curT = maxT - curT'
+    curT = maxTime - curT'
     t = g^.place
     p#q = p*(1-t) + q*t
     p##q = p*(1-sqrt t) + q*sqrt t
@@ -257,7 +261,7 @@ drawGame curT' g = let
         scale 0.2 0.2 $ color (light cyan) $ fontString $ show $ decodeNum f,
         color white $ rectangleWire 1 1]
       else drawField fu f
-    restTime = if 0 < curT && curT < maxT-3 && g^.mode == Play
+    restTime = if 0 < curT && curT < maxTime-3 && g^.mode == Play
       then let
           str = take 4 (show curT) ++ drop 2 (show $ g^.rand)
           c = if curT < 10 then magenta else vaniCol
