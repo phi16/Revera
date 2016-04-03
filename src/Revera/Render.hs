@@ -60,6 +60,8 @@ render w = return $ onRender $ do
       scr = w^.game.count
       ix = w^.rank.rankIx
       pos = w^.rank.position
+      ani = 1-exp(-pos*50+1)
+      dif x = ani*x + (1-ani)*500
       (sz,condStr) = if
         | scr == 0 -> (74,"null")
         | scr < 10 -> (74,"PooR")
@@ -69,7 +71,7 @@ render w = return $ onRender $ do
         | scr < 70 -> (45,"PeRfEct")
         | scr < 100 -> (35,"ExcellEnt")
         | otherwise -> (31,"incrEdIble")
-      t i j = translate i j $ rotate 30 $ zoom sz $ centerString condStr
+      t i j = translate i j $ rotate (30*ani) $ zoom sz $ centerString condStr
     draw $ color (withAlpha 0.07 orange) $ pictures [ t i j | i<-[-2..2], j<-[-2..2] ]
     forM_ (zip [0..] $ w^.rank.rankings) $ \(i,r) -> do
       let
@@ -82,6 +84,6 @@ render w = return $ onRender $ do
         x = -250
         y = fromIntegral i * 29 - 40
         str = show (i+1) ++ ". " ++ show r
-      draw $ color c $ translate x y $ zoom 10 $ fontString str
-    draw $ color cyan $ translate (-50) 160 $ zoom 10 $ fontString "PREss entER to"
-    draw $ color cyan $ translate (-50) 190 $ zoom 10 $ fontString "back to title"
+      draw $ color c $ translate x (dif y) $ zoom 10 $ fontString str
+    draw $ color cyan $ translate (-50) (dif 160) $ zoom 10 $ fontString "PREss entER to"
+    draw $ color cyan $ translate (-50) (dif 190) $ zoom 10 $ fontString "back to title"
