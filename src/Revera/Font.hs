@@ -16,7 +16,7 @@ measureString [] = 0
 measureString xs = (fromIntegral (length xs) - 1) * 2.5
 
 fontMap :: Map Char Picture
-fontMap = insert 'O' (circle 0.3) $ fmap toPic $ fromList fs where
+fontMap = {- insert 'O' (circle 0.3) $ -} fmap toPic $ fromList fs where
   toPic :: [[Float]] -> Picture
   toPic vs = scale (1/2) (1/2) $ translate (-2) (-2) $ pictures $ map toPic' vs
   toPic' :: [Float] -> Picture
@@ -82,4 +82,5 @@ fs = [
   ('L',[[3,3,4,2,3,1],[0,2,4,2]]),
   ('S',[[1,1,0,2,1,3],[3,3,4,2,3,1],[0,2,4,2]]),
   ('T',[[3,1,2,0,1,1],[1,3,2,4,3,3],[2,0,2,4]]),
-  ('X',[[2,0.5,0.5,2,2,3.5,3.5,2,2,0.5]])]
+  ('X',[[2,0.5,0.5,2,2,3.5,3.5,2,2,0.5]]),
+  ('O',[[1,1,3,3],[1,3,3,1]])]
